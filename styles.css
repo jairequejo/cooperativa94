@@ -396,30 +396,138 @@ main {
 .month-aporte.pagado { color: var(--green); }
 .month-aporte.nopago { color: var(--muted-lt); font-weight: 400; font-style: italic; font-size: 12px; }
 
+/* ── EGRESO ROW ──────────────────────────────── */
+.egreso-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 18px 8px 38px;
+  border-radius: 8px;
+  background: rgba(220,38,38,.05);
+  border: 1px solid rgba(220,38,38,.15);
+  animation: fadeUp .22s ease both;
+  margin-left: 12px;
+}
+.egreso-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.egreso-fecha {
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(220,38,38,.08);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+.egreso-motivo {
+  font-size: 12px;
+  color: var(--red);
+  font-style: italic;
+}
+.egreso-monto {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--red);
+  white-space: nowrap;
+}
+
+/* ── YEAR HEADER EGRESOS ─────────────────────── */
+.year-ing { color: var(--green); }
+.year-egr { color: var(--red); font-size: 12px; }
+
+/* ── STATS ROW (Dashboard) ───────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 14px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.stat-label {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 900;
+}
+.stat-ing { border-bottom: 3px solid var(--green); }
+.stat-ing .stat-value { color: var(--green); }
+.stat-egr { border-bottom: 3px solid var(--red); }
+.stat-egr .stat-value { color: var(--red); }
+.stat-net { border-bottom: 3px solid var(--primary); }
+.stat-net .stat-value { color: var(--primary); }
+
+/* ── TOTAL ACCIONES (Login page) ─────────────── */
+.total-acciones-card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-top: 16px;
+  box-shadow: var(--shadow);
+  animation: fadeUp .3s ease both;
+}
+.ta-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 16px;
+  letter-spacing: .3px;
+}
+.ta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.ta-item {
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 12px;
+}
+.ta-ing { background: rgba(22,163,74,.06); }
+.ta-egr { background: rgba(220,38,38,.06); }
+.ta-net { background: rgba(37,99,235,.06); }
+.ta-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 6px;
+}
+.ta-value {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: clamp(14px, 3.5vw, 20px);
+  display: block;
+}
+.ta-ing .ta-value { color: var(--green); }
+.ta-egr .ta-value { color: var(--red); }
+.ta-net .ta-value { color: var(--primary); }
+
 /* Año sin datos */
 .year-empty {
   padding: 12px 18px 12px 30px;
   font-size: 12px;
   color: var(--muted-lt);
   font-style: italic;
-}
-
-/* ── CONFIG NOTICE ───────────────────────────── */
-.config-notice {
-  background: var(--blue-50);
-  border: 1px dashed var(--blue-400);
-  border-radius: 12px;
-  padding: 14px 16px;
-  font-size: 12px;
-  color: var(--primary);
-  margin-bottom: 18px;
-  line-height: 1.8;
-}
-.config-notice code {
-  background: var(--blue-100);
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 11px;
 }
 
 /* ── FOOTER ──────────────────────────────────── */
@@ -438,25 +546,25 @@ footer {
    RESPONSIVE — Mobile First
    ══════════════════════════════════════════════ */
 
-/* Móvil pequeño */
 @media (max-width: 380px) {
   header { padding: 22px 16px 20px; }
-  .header-logo { width: 72px; height: 72px; }
+  .header-logo { width: 64px; height: 64px; }
   h1 { font-size: 22px; }
-  main { padding: 20px 12px 0; }
-  .card { padding: 20px 16px; }
-  .user-banner { padding: 18px 16px; }
-  .total-block { text-align: left; width: 100%; }
+  main { padding: 20px 10px 0; }
+  .card { padding: 18px 14px; }
+  .user-banner { padding: 16px 14px; }
+  .stats-row { grid-template-columns: 1fr; gap: 6px; }
+  .ta-grid { grid-template-columns: 1fr; gap: 6px; }
+  .egreso-row { margin-left: 0; padding-left: 14px; }
 }
 
-/* Móvil estándar */
 @media (max-width: 480px) {
   .user-banner { flex-direction: column; align-items: flex-start; }
-  .total-block { text-align: left; }
   .month-row { padding-left: 16px; }
+  .egreso-row { padding-left: 24px; margin-left: 4px; }
+  .year-right { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 }
 
-/* Tablet y escritorio */
 @media (min-width: 640px) {
   header { padding: 36px 32px 30px; flex-direction: row; justify-content: center; gap: 20px; }
   .header-text { text-align: left; }
