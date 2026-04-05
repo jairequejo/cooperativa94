@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1d4ed8" />
+  <meta name="description" content="Consulta tus aportes y Estado de cuenta — Cooperativa Promoción 94" />
+  <title>Cooperativa Promo 94 — Consulta de Aportes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Logo Cooperativa 94" class="header-logo" />
+  <div class="header-text">
+    <div class="badge">⚜ Cooperativa</div>
+    <h1>Cooperativa 94</h1>
+    <p class="subtitle">Consulta tus aportes</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- ── LOGIN ── -->
+  <div id="loginScreen">
+
+    <div class="card">
+      <span class="card-label">🔍 Busca por nombre o DNI</span>
+      <div class="input-wrap">
+        <input type="text" id="buscarInput"
+               placeholder="Apellido, nombre o número de DNI…"
+               autocomplete="off"
+               inputmode="text"
+               enterkeyhint="search" />
+      </div>
+      <div id="sugerencias"></div>
+      <button class="btn-primary" id="btnConsultar" onclick="buscar()">Consultar →</button>
+      <div class="error-msg" id="errorMsg"></div>
+      <div class="loading" id="loadingMsg">
+        <div class="spinner"></div>
+        <span>Cargando datos…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DASHBOARD ── -->
+  <div id="dashboard">
+    <button class="back-btn" onclick="volverLogin()">← Volver</button>
+    <div class="user-banner">
+      <div>
+        <div class="user-name" id="uNombre">—</div>
+        <div class="user-meta" id="uMeta"></div>
+      </div>
+      <div class="total-block">
+        <div class="total-label">Total aportado</div>
+        <div class="total-amount" id="uTotal">S/ 0</div>
+      </div>
+    </div>
+    <div class="section-title">Historial de aportes</div>
+    <div class="aportes-grid" id="aportesGrid"></div>
+  </div>
+
+</main>
+
+<footer>Cooperativa Promoción 94 &middot; Solo lectura</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
