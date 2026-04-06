@@ -289,10 +289,13 @@ main {
   margin-bottom: 14px;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 14px;
+  align-items: center;
+  gap: 16px;
   box-shadow: 0 6px 24px rgba(37,99,235,.30);
+}
+.user-banner > div:first-child {
+  flex: 1;
+  min-width: 0;
 }
 .user-name {
   font-family: 'Playfair Display', serif;
@@ -307,7 +310,7 @@ main {
   margin-top: 5px;
   letter-spacing: .4px;
 }
-.total-block { text-align: right; }
+.total-block { text-align: right; flex-shrink: 0; }
 .total-label {
   font-size: 10px;
   color: rgba(255,255,255,.65);
