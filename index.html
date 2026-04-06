@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#1d4ed8" />
-  <meta name="description" content="Consulta tus aportes y egresos — Cooperativa Promoción 94" />
-  <title>Cooperativa Promo 94 — Consulta de Aportes</title>
+  <meta name="description" content="Consulta tus acciones — Cooperativa Promoción 94" />
+  <title>Cooperativa Promo 94 — Consulta de Acciones</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet" />
@@ -19,7 +19,7 @@
   <div class="header-text">
     <div class="badge">⚜ Cooperativa</div>
     <h1>Cooperativa 94</h1>
-    <p class="subtitle">Consulta tus aportes y egresos</p>
+    <p class="subtitle">Consulta tus acciones</p>
   </div>
 </header>
 
@@ -49,11 +49,11 @@
       <div class="ta-title">📊 Total de Acciones de la Cooperativa</div>
       <div class="ta-grid">
         <div class="ta-item ta-ing">
-          <span class="ta-label">Total Ingresos</span>
+          <span class="ta-label">Total Acc. Ingresadas</span>
           <span class="ta-value" id="taIngresos">—</span>
         </div>
         <div class="ta-item ta-egr">
-          <span class="ta-label">Total Egresos</span>
+          <span class="ta-label">Total Acc. Egresadas</span>
           <span class="ta-value" id="taEgresos">—</span>
         </div>
         <div class="ta-item ta-net">
@@ -73,21 +73,25 @@
         <div class="user-name" id="uNombre">—</div>
         <div class="user-meta" id="uMeta"></div>
       </div>
+      <div class="total-block">
+        <div class="total-label">Billetera</div>
+        <div class="total-amount" id="uBilletera">S/ 0</div>
+      </div>
     </div>
 
     <!-- Stats: Ingresos / Egresos / Neto -->
     <div class="stats-row">
       <div class="stat-card stat-ing">
-        <div class="stat-label">Ingresos</div>
-        <div class="stat-value" id="uIngresos">S/ 0</div>
+        <div class="stat-label">Acc. Ingresadas</div>
+        <div class="stat-value" id="uIngresos">0</div>
       </div>
       <div class="stat-card stat-egr">
-        <div class="stat-label">Egresos</div>
-        <div class="stat-value" id="uEgresos">S/ 0</div>
+        <div class="stat-label">Acc. Egresadas</div>
+        <div class="stat-value" id="uEgresos">0</div>
       </div>
       <div class="stat-card stat-net">
         <div class="stat-label">Saldo Neto</div>
-        <div class="stat-value" id="uNeto">S/ 0</div>
+        <div class="stat-value" id="uNeto">0</div>
       </div>
     </div>
 

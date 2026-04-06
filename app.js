@@ -56,7 +56,7 @@ function limpiarMonto(s) {
 
 function fmtS(n) {
   if (!n) return '—';
-  return 'S/ ' + Math.abs(n).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return Math.abs(n).toLocaleString('es-PE', {minimumFractionDigits:0, maximumFractionDigits:0});
 }
 
 function parseFecha(str) {
@@ -186,7 +186,7 @@ function renderSugerencias(matches) {
   matches.forEach(s => {
     const d = document.createElement('div');
     d.className = 'sug-item';
-    d.innerHTML = `<div class="sug-left"><span class="sug-n">${s.n}.</span><span>${s.nombre}</span></div><span class="sug-dni">${s.dni}</span>`;
+    d.innerHTML = `<div class="sug-left"><span>${s.nombre}</span></div><span class="sug-dni">${s.dni}</span>`;
     d.onclick = () => seleccionar(s.dni);
     sugBox.appendChild(d);
   });
@@ -242,6 +242,10 @@ function mostrarDashboard(socio) {
   document.getElementById('uEgresos').textContent = fmtS(totalEgr);
   document.getElementById('uNeto').textContent = fmtS(totalIng - totalEgr);
 
+  const neto = totalIng - totalEgr;
+  const billetera = neto * 10;
+  document.getElementById('uBilletera').textContent = 'S/ ' + Math.abs(billetera).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+
   // Grilla de años
   const grid = document.getElementById('aportesGrid');
   grid.innerHTML = '';
@@ -278,7 +282,7 @@ function mostrarDashboard(socio) {
         row.className = 'month-row';
         row.style.animationDelay = (i * 30) + 'ms';
         row.innerHTML = `<span class="month-name">${MESES_FULL[i]}</span>
-          <span class="month-aporte ${val > 0 ? 'pagado' : 'nopago'}">${val > 0 ? fmtS(val) : 'sin aporte'}</span>`;
+          <span class="month-aporte ${val > 0 ? 'pagado' : 'nopago'}">${val > 0 ? fmtS(val) : 'sin acciones'}</span>`;
         rowsDiv.appendChild(row);
 
         // Egresos de este mes
