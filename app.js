@@ -36,6 +36,9 @@ let loaded  = false;
 let socioActual = null;
 
 // ── UTILS ──────────────────────────────────────────────────────
+function sinTildes(s) {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
 function parseCSV(text) {
   return text.trim().split('\n').map(line => {
     const cols = []; let cur = ''; let inQ = false;
@@ -176,7 +179,10 @@ buscarInput.addEventListener('input', async () => {
 });
 
 function filtrar(q) {
-  return SOCIOS.filter(s => s.nombre.toLowerCase().includes(q) || s.dni.includes(q));
+  const qn = sinTildes(q.toLowerCase());
+  return SOCIOS.filter(s =>
+    sinTildes(s.nombre.toLowerCase()).includes(qn) || s.dni.includes(q)
+  );
 }
 
 function renderSugerencias(matches) {
