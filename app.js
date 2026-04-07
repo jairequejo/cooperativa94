@@ -154,7 +154,7 @@ function actualizarTotalAcciones() {
     el.style.display = 'block';
     document.getElementById('taIngresos').textContent = fmtS(ingT);
     document.getElementById('taEgresos').textContent  = fmtS(egrT);
-    document.getElementById('taNeto').textContent     = fmtS(neto);
+    document.getElementById('taNeto').textContent     = 'S/ ' + (neto * 10).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
 }
 
@@ -225,6 +225,7 @@ function mostrarDashboard(socio) {
   socioActual = socio;
   sugBox.style.display = 'none';
   document.getElementById('loginScreen').style.display = 'none';
+  document.querySelector('header').classList.add('compact');
 
   document.getElementById('uNombre').textContent = socio.nombre;
   document.getElementById('uMeta').textContent   = 'DNI ' + socio.dni;
@@ -313,6 +314,7 @@ function mostrarDashboard(socio) {
 function volverLogin() {
   document.getElementById('dashboard').style.display  = 'none';
   document.getElementById('loginScreen').style.display = 'block';
+  document.querySelector('header').classList.remove('compact');
   buscarInput.value = '';
   sugBox.style.display = 'none';
   document.getElementById('errorMsg').classList.remove('show');
