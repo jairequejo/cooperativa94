@@ -334,14 +334,24 @@ function cargarImagenBase64(src) {
     var img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function() {
-      var canvas = document.createElement('canvas');
-      canvas.width  = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      resolve({ dataUrl: canvas.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width  = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve({ dataUrl: canvas.toDataURL('image/png'), w: img.naturalWidth, h: img.naturalHeight });
+      } catch(e) {
+        // Canvas tainted por CORS — continuar sin logo
+        resolve(null);
+      }
     };
     img.onerror = function() { resolve(null); };
+    // Usar URL absoluta para evitar problemas de CORS en GitHub Pages
+    if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+      var base = window.location.href.replace(/\/[^\/]*$/, '/');
+      src = base + src;
+    }
     img.src = src;
   });
 }
