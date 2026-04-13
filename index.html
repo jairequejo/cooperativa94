@@ -102,8 +102,30 @@
       </div>
     </div>
 
-    <div class="section-title">Historial de movimientos</div>
-    <div class="aportes-grid" id="aportesGrid"></div>
+    <!-- Tabs de navegación -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" id="tabMovimientos" onclick="switchTab('movimientos')">📋 Historial de Movimientos</button>
+      <button class="dash-tab" id="tabPrestamos" onclick="switchTab('prestamos')">💳 Mis Préstamos</button>
+    </div>
+
+    <!-- Panel: Movimientos -->
+    <div id="panelMovimientos">
+      <div class="aportes-grid" id="aportesGrid"></div>
+    </div>
+
+    <!-- Panel: Préstamos -->
+    <div id="panelPrestamos" style="display:none">
+      <div class="prestamos-loading" id="prestamosLoading">
+        <div class="prestamos-spinner"></div>
+        <span>Cargando préstamos…</span>
+      </div>
+      <div id="prestamosContent"></div>
+      <div class="prestamos-empty" id="prestamosEmpty" style="display:none">
+        <div class="prestamos-empty-icon">✅</div>
+        <div class="prestamos-empty-title">Sin préstamos activos</div>
+        <div class="prestamos-empty-text">No tienes préstamos registrados en este momento.</div>
+      </div>
+    </div>
   </div>
 
 </main>

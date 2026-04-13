@@ -11,6 +11,7 @@ const HOJAS = {
   '2026': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=1981676917&single=true&output=csv',
 };
 const URL_EGRESOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=24617374&single=true&output=csv';
+const URL_PRESTAMOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=205656499&single=true&output=csv';
 // ══════════════════════════════════════════════════════════════
 
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
@@ -29,10 +30,12 @@ const MES_NUM = {1:'ene',2:'feb',3:'mar',4:'abr',5:'may',6:'jun',
                  7:'jul',8:'ago',9:'sept',10:'oct',11:'nov',12:'dic'};
 
 // ── ESTADO GLOBAL ──────────────────────────────────────────────
-let SOCIOS  = [];
-let APORTES = {};
-let EGRESOS = [];
-let loaded  = false;
+let SOCIOS    = [];
+let APORTES   = {};
+let EGRESOS   = [];
+let PRESTAMOS = [];
+let loaded    = false;
+let prestamosLoaded = false;
 let socioActual = null;
 
 // ── UTILS ──────────────────────────────────────────────────────
@@ -314,6 +317,11 @@ function mostrarDashboard(socio) {
   });
 
   document.getElementById('dashboard').style.display = 'block';
+
+  // Reset tabs al abrir dashboard
+  switchTab('movimientos');
+  // Pre-cargar préstamos en background
+  cargarPrestamos();
 }
 
 // ── VOLVER ─────────────────────────────────────────────────────
@@ -324,6 +332,290 @@ function volverLogin() {
   buscarInput.value = '';
   sugBox.style.display = 'none';
   document.getElementById('errorMsg').classList.remove('show');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SISTEMA DE TABS
+// ══════════════════════════════════════════════════════════════
+function switchTab(tab) {
+  const tabMov = document.getElementById('tabMovimientos');
+  const tabPre = document.getElementById('tabPrestamos');
+  const panelMov = document.getElementById('panelMovimientos');
+  const panelPre = document.getElementById('panelPrestamos');
+
+  tabMov.classList.toggle('active', tab === 'movimientos');
+  tabPre.classList.toggle('active', tab === 'prestamos');
+  panelMov.style.display = tab === 'movimientos' ? 'block' : 'none';
+  panelPre.style.display = tab === 'prestamos' ? 'block' : 'none';
+
+  if (tab === 'prestamos' && socioActual) {
+    renderPrestamos(socioActual.dni);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PRÉSTAMOS — Carga y renderizado
+// ══════════════════════════════════════════════════════════════
+async function cargarPrestamos() {
+  if (prestamosLoaded) return;
+  try {
+    const res = await fetch(URL_PRESTAMOS);
+    const rows = parseCSV(await res.text());
+    const hdr = rows[0].map(h => h.trim().toLowerCase());
+
+    const iDni    = hdr.findIndex(h => h === 'dni');
+    const iNom    = hdr.findIndex(h => h.includes('nombre'));
+    const iFecha  = hdr.findIndex(h => h.includes('fecha'));
+    const iPrest  = hdr.findIndex(h => h.includes('prestamo'));
+    const iInter  = hdr.findIndex(h => h.includes('interes') || h.includes('interés'));
+    const iTotal  = hdr.findIndex(h => h.includes('total de cuotas') || h.includes('total cuotas'));
+    const iMonto  = hdr.findIndex(h => h.includes('monto a pagar'));
+    const iCuota  = hdr.findIndex(h => h.includes('cuota fija'));
+    const iPagadas= hdr.findIndex(h => h.includes('cuotas pagadas') || h.includes('pagadas'));
+    const iSaldo  = hdr.findIndex(h => h.includes('saldo'));
+
+    PRESTAMOS = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const dni = (r[iDni] || '').trim();
+      if (!dni) continue;
+
+      PRESTAMOS.push({
+        dni,
+        nombre:       (r[iNom] || '').trim(),
+        fecha:        (r[iFecha] || '').trim(),
+        prestamo:     limpiarMonto(r[iPrest]),
+        interes:      limpiarMonto(r[iInter]),
+        totalCuotas:  parseInt(r[iTotal]) || 0,
+        montoPagar:   limpiarMonto(r[iMonto]),
+        cuotaFija:    limpiarMonto(r[iCuota]),
+        cuotasPagadas:parseInt(r[iPagadas]) || 0,
+        saldo:        limpiarMonto(r[iSaldo]),
+      });
+    }
+    prestamosLoaded = true;
+  } catch(e) {
+    console.warn('Error cargando préstamos:', e);
+    PRESTAMOS = [];
+  }
+}
+
+function renderPrestamos(dni) {
+  const loading = document.getElementById('prestamosLoading');
+  const content = document.getElementById('prestamosContent');
+  const empty   = document.getElementById('prestamosEmpty');
+
+  content.innerHTML = '';
+  empty.style.display = 'none';
+
+  if (!prestamosLoaded) {
+    loading.style.display = 'flex';
+    // Esperar a que carguen y reintentar
+    setTimeout(() => renderPrestamos(dni), 500);
+    return;
+  }
+
+  loading.style.display = 'none';
+
+  const misPrestamos = PRESTAMOS.filter(p => p.dni === dni);
+
+  if (!misPrestamos.length) {
+    empty.style.display = 'flex';
+    return;
+  }
+
+  // Resumen total — préstamos completados tienen saldo=0
+  const totalDeuda  = misPrestamos.reduce((s,p) => s + p.montoPagar, 0);
+  const totalSaldo  = misPrestamos.reduce((s,p) => {
+    const done = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
+    return s + (done ? 0 : Math.max(0, p.saldo));
+  }, 0);
+  const totalPagado = totalDeuda - totalSaldo;
+  const progTotal   = totalDeuda > 0 ? Math.min(100, (totalPagado / totalDeuda) * 100) : 0;
+
+  let html = `
+    <div class="prestamos-resumen" id="resumenGeneral">
+      <div class="prestamos-resumen-header" onclick="document.getElementById('resumenGeneral').classList.toggle('open')">
+        <div class="prestamos-resumen-left">
+          <span class="prestamos-resumen-icon">💰</span>
+          <span class="prestamos-resumen-title">Resumen General</span>
+        </div>
+        <div class="prestamos-resumen-right">
+          <span class="prestamos-resumen-preview">S/ ${fmtMoney(totalSaldo)} pendiente</span>
+          <span class="prestamos-resumen-chevron">▼</span>
+        </div>
+      </div>
+      <div class="prestamos-resumen-body">
+        <div class="prestamos-circle-wrap">
+          ${circularProgress(progTotal, 120, progTotal >= 100 ? '#16a34a' : '#3b82f6')}
+          <div class="prestamos-circle-label">
+            <span class="prestamos-circle-pct">${Math.round(progTotal)}%</span>
+            <span class="prestamos-circle-sub">pagado</span>
+          </div>
+        </div>
+        <div class="prestamos-resumen-stats">
+          <div class="prs-stat">
+            <span class="prs-stat-label">Deuda Total</span>
+            <span class="prs-stat-value prs-danger">S/ ${fmtMoney(totalDeuda)}</span>
+          </div>
+          <div class="prs-stat">
+            <span class="prs-stat-label">Total Pagado</span>
+            <span class="prs-stat-value prs-success">S/ ${fmtMoney(totalPagado)}</span>
+          </div>
+          <div class="prs-stat">
+            <span class="prs-stat-label">Saldo Pendiente</span>
+            <span class="prs-stat-value prs-warning">S/ ${fmtMoney(totalSaldo)}</span>
+          </div>
+          <div class="prs-stat">
+            <span class="prs-stat-label">Préstamos Activos</span>
+            <span class="prs-stat-value prs-info">${misPrestamos.length}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Cada préstamo individual
+  misPrestamos.forEach((p, idx) => {
+    const cuotasRestantes = p.totalCuotas - p.cuotasPagadas;
+    const isComplete = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
+    // Si está completado, forzar 100% aunque el saldo en la hoja no sea 0
+    const progCuotas = isComplete ? 100 : (p.totalCuotas > 0 ? (p.cuotasPagadas / p.totalCuotas) * 100 : 0);
+    const pagado     = isComplete ? p.montoPagar : Math.max(0, p.montoPagar - p.saldo);
+    const saldoReal  = isComplete ? 0 : Math.max(0, p.saldo);
+    const progMonto  = isComplete ? 100 : (p.montoPagar > 0 ? Math.min(100, (pagado / p.montoPagar) * 100) : 0);
+    const color = isComplete ? '#16a34a' : (progCuotas >= 50 ? '#f59e0b' : '#ef4444');
+
+    html += `
+      <div class="prestamo-card ${isComplete ? 'prestamo-completado' : ''}" style="animation-delay: ${idx * 80}ms">
+        <div class="prestamo-card-header">
+          <div class="prestamo-card-left">
+            <span class="prestamo-badge ${isComplete ? 'badge-completado' : 'badge-activo'}">
+              ${isComplete ? '✅ Completado' : '🔄 En curso'}
+            </span>
+            <span class="prestamo-fecha">📅 ${p.fecha || '—'}</span>
+          </div>
+          <div class="prestamo-monto-principal">S/ ${fmtMoney(p.prestamo)}</div>
+        </div>
+
+        <div class="prestamo-card-body">
+          <div class="prestamo-progress-section">
+            <div class="prestamo-circle-container">
+              ${circularProgress(progCuotas, 72, color)}
+              <div class="prestamos-circle-label prestamo-circle-inner">
+                <span class="prestamos-circle-pct" style="font-size:16px">${p.cuotasPagadas}/${p.totalCuotas}</span>
+                <span class="prestamos-circle-sub">cuotas</span>
+              </div>
+            </div>
+            <div class="prestamo-bar-section">
+              <div class="prestamo-bar-label">
+                <span>Progreso de pago</span>
+                <span class="prestamo-bar-pct">${Math.round(progMonto)}%</span>
+              </div>
+              <div class="prestamo-bar-track">
+                <div class="prestamo-bar-fill" style="width:${progMonto}%;background:${color}"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="prestamo-details-grid">
+            <div class="prestamo-detail">
+              <span class="pd-label">Capital</span>
+              <span class="pd-value">S/ ${fmtMoney(p.prestamo)}</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Interés</span>
+              <span class="pd-value">${p.interes}%</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Monto Total</span>
+              <span class="pd-value pd-bold">S/ ${fmtMoney(p.montoPagar)}</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Cuota Fija</span>
+              <span class="pd-value">S/ ${fmtMoney(p.cuotaFija)}</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Pagado</span>
+              <span class="pd-value pd-green">S/ ${fmtMoney(pagado)}</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Saldo</span>
+              <span class="pd-value pd-red">S/ ${fmtMoney(saldoReal)}</span>
+            </div>
+          </div>
+
+          <div class="prestamo-cuotas-summary">
+            <div class="pcs-item pcs-pagadas">
+              <span class="pcs-num">${p.cuotasPagadas}</span>
+              <span class="pcs-txt">Pagadas</span>
+            </div>
+            <div class="pcs-divider"></div>
+            <div class="pcs-item pcs-restantes">
+              <span class="pcs-num">${cuotasRestantes}</span>
+              <span class="pcs-txt">Restantes</span>
+            </div>
+            <div class="pcs-divider"></div>
+            <div class="pcs-item pcs-total">
+              <span class="pcs-num">${p.totalCuotas}</span>
+              <span class="pcs-txt">Total</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  content.innerHTML = html;
+
+  // Animar barras de progreso
+  requestAnimationFrame(() => {
+    content.querySelectorAll('.prestamo-bar-fill').forEach(bar => {
+      const w = bar.style.width;
+      bar.style.width = '0%';
+      requestAnimationFrame(() => {
+        bar.style.transition = 'width 1s cubic-bezier(0.4, 0, 0.2, 1)';
+        bar.style.width = w;
+      });
+    });
+    // Animar SVG circles
+    content.querySelectorAll('.progress-circle-fg').forEach(circle => {
+      const target = circle.getAttribute('data-target');
+      const circumference = circle.getAttribute('data-circumference');
+      circle.style.strokeDashoffset = circumference;
+      requestAnimationFrame(() => {
+        circle.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
+        circle.style.strokeDashoffset = target;
+      });
+    });
+  });
+}
+
+function circularProgress(percent, size, color) {
+  const stroke = 6;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (percent / 100) * c;
+  const half = size / 2;
+  return `
+    <svg class="progress-ring" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle class="progress-circle-bg" cx="${half}" cy="${half}" r="${r}"
+        stroke="#e2e8f0" stroke-width="${stroke}" fill="none" />
+      <circle class="progress-circle-fg" cx="${half}" cy="${half}" r="${r}"
+        stroke="${color}" stroke-width="${stroke}" fill="none"
+        stroke-linecap="round"
+        stroke-dasharray="${c}"
+        stroke-dashoffset="${offset}"
+        data-target="${offset}"
+        data-circumference="${c}"
+        transform="rotate(-90 ${half} ${half})" />
+    </svg>
+  `;
+}
+
+function fmtMoney(n) {
+  if (!n && n !== 0) return '0.00';
+  return Math.abs(n).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
 }
 
 // ── INIT ───────────────────────────────────────────────────────
