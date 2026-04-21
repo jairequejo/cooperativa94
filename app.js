@@ -77,7 +77,8 @@ function parseFecha(str) {
 
 // ── CARGA HOJAS ───────────────────────────────────────────────
 async function cargarHoja(anio, url) {
-  const res = await fetch(url);
+  const urlParams = url.includes('?') ? '&t=' : '?t=';
+  const res = await fetch(url + urlParams + Date.now(), { cache: 'no-store' });
   const rows = parseCSV(await res.text());
   const hdr = rows[0].map(h => h.trim().toLowerCase());
 
@@ -359,7 +360,7 @@ function switchTab(tab) {
 async function cargarPrestamos() {
   if (prestamosLoaded) return;
   try {
-    const res = await fetch(URL_PRESTAMOS);
+    const res = await fetch(URL_PRESTAMOS + '&t=' + Date.now(), { cache: 'no-store' });
     const rows = parseCSV(await res.text());
     const hdr = rows[0].map(h => h.trim().toLowerCase());
 
@@ -380,17 +381,26 @@ async function cargarPrestamos() {
       const dni = (r[iDni] || '').trim();
       if (!dni) continue;
 
+      const totalCuotas = parseInt(r[iTotal]) || 0;
+      const montoPagar = limpiarMonto(r[iMonto]);
+      const cuotaFija = limpiarMonto(r[iCuota]);
+      
+      // En el Google Sheets, la columna "SALDO" en realidad contiene el MONTO PAGADO (Cuotas Pagadas * Cuota Fija)
+      // Por lo tanto, p.saldo aquí será el monto_pagado. Lo manejaremos correctamente en el render()
+      const montoPagadoEnHoja = limpiarMonto(r[iSaldo]); 
+      const cuotasPagadasEnHoja = parseInt(r[iPagadas]) || 0;
+
       PRESTAMOS.push({
         dni,
         nombre:       (r[iNom] || '').trim(),
         fecha:        (r[iFecha] || '').trim(),
         prestamo:     limpiarMonto(r[iPrest]),
         interes:      limpiarMonto(r[iInter]),
-        totalCuotas:  parseInt(r[iTotal]) || 0,
-        montoPagar:   limpiarMonto(r[iMonto]),
-        cuotaFija:    limpiarMonto(r[iCuota]),
-        cuotasPagadas:parseInt(r[iPagadas]) || 0,
-        saldo:        limpiarMonto(r[iSaldo]),
+        totalCuotas:  totalCuotas,
+        montoPagar:   montoPagar,
+        cuotaFija:    cuotaFija,
+        cuotasPagadas:cuotasPagadasEnHoja,
+        saldo:        montoPagadoEnHoja, // esto es en realidad lo pagado!
       });
     }
     prestamosLoaded = true;
@@ -424,13 +434,14 @@ function renderPrestamos(dni) {
     return;
   }
 
-  // Resumen total — préstamos completados tienen saldo=0
+  // Resumen total
   const totalDeuda  = misPrestamos.reduce((s,p) => s + p.montoPagar, 0);
-  const totalSaldo  = misPrestamos.reduce((s,p) => {
+  // Como p.saldo trae el monto pagado calculado en excel:
+  const totalPagado = misPrestamos.reduce((s,p) => {
     const done = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
-    return s + (done ? 0 : Math.max(0, p.saldo));
+    return s + (done ? p.montoPagar : Math.max(0, p.saldo));
   }, 0);
-  const totalPagado = totalDeuda - totalSaldo;
+  const totalSaldo = Math.max(0, totalDeuda - totalPagado);
   const progTotal   = totalDeuda > 0 ? Math.min(100, (totalPagado / totalDeuda) * 100) : 0;
 
   let html = `
@@ -479,10 +490,13 @@ function renderPrestamos(dni) {
   misPrestamos.forEach((p, idx) => {
     const cuotasRestantes = p.totalCuotas - p.cuotasPagadas;
     const isComplete = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
-    // Si está completado, forzar 100% aunque el saldo en la hoja no sea 0
+    
     const progCuotas = isComplete ? 100 : (p.totalCuotas > 0 ? (p.cuotasPagadas / p.totalCuotas) * 100 : 0);
-    const pagado     = isComplete ? p.montoPagar : Math.max(0, p.montoPagar - p.saldo);
-    const saldoReal  = isComplete ? 0 : Math.max(0, p.saldo);
+    
+    // p.saldo es el monto pagado que viene en la columna SALDO
+    const pagado     = isComplete ? p.montoPagar : Math.max(0, p.saldo);
+    const saldoReal  = isComplete ? 0 : Math.max(0, p.montoPagar - pagado);
+    
     const progMonto  = isComplete ? 100 : (p.montoPagar > 0 ? Math.min(100, (pagado / p.montoPagar) * 100) : 0);
     const color = isComplete ? '#16a34a' : (progCuotas >= 50 ? '#f59e0b' : '#ef4444');
 
@@ -519,9 +533,9 @@ function renderPrestamos(dni) {
           </div>
 
           <div class="prestamo-details-grid">
-            <div class="prestamo-detail">
+            <div class="prestamo-detail pd-bg-yellow">
               <span class="pd-label">Capital</span>
-              <span class="pd-value">S/ ${fmtMoney(p.prestamo)}</span>
+              <span class="pd-value pd-yellow">S/ ${fmtMoney(p.prestamo)}</span>
             </div>
             <div class="prestamo-detail">
               <span class="pd-label">Interés</span>
@@ -536,12 +550,12 @@ function renderPrestamos(dni) {
               <span class="pd-value">S/ ${fmtMoney(p.cuotaFija)}</span>
             </div>
             <div class="prestamo-detail">
-              <span class="pd-label">Saldo</span>
-              <span class="pd-value pd-red">S/ ${fmtMoney(saldoReal)}</span>
-            </div>
-            <div class="prestamo-detail">
               <span class="pd-label">Pagado</span>
               <span class="pd-value pd-green">S/ ${fmtMoney(pagado)}</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Saldo</span>
+              <span class="pd-value pd-red">S/ ${fmtMoney(saldoReal)}</span>
             </div>
           </div>
 
