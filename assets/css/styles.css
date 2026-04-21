@@ -104,6 +104,46 @@ header.compact h1 {
 }
 header.compact .header-text { text-align: left; }
 
+.btn-install-pwa {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all .2s ease;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+.btn-install-pwa:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,.2);
+}
+.btn-install-pwa:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+header.compact .btn-install-pwa {
+  top: 10px;
+  right: 10px;
+  padding: 6px 10px;
+  font-size: 10px;
+}
+
 .header-logo {
   width: 90px;
   height: 90px;
