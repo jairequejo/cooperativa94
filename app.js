@@ -367,13 +367,13 @@ async function cargarPrestamos() {
     const iDni    = hdr.findIndex(h => h === 'dni');
     const iNom    = hdr.findIndex(h => h.includes('nombre'));
     const iFecha  = hdr.findIndex(h => h.includes('fecha'));
-    const iPrest  = hdr.findIndex(h => h.includes('prestamo'));
+    const iPrest  = hdr.findIndex(h => h.includes('capital'));
     const iInter  = hdr.findIndex(h => h.includes('interes') || h.includes('interés'));
     const iTotal  = hdr.findIndex(h => h.includes('total de cuotas') || h.includes('total cuotas'));
     const iMonto  = hdr.findIndex(h => h.includes('monto a pagar'));
     const iCuota  = hdr.findIndex(h => h.includes('cuota fija'));
     const iPagadas= hdr.findIndex(h => h.includes('cuotas pagadas') || h.includes('pagadas'));
-    const iSaldo  = hdr.findIndex(h => h.includes('saldo'));
+    const iSaldo  = hdr.findIndex(h => h.includes('monto pagado'));
 
     PRESTAMOS = [];
     for (let i = 1; i < rows.length; i++) {
@@ -394,13 +394,13 @@ async function cargarPrestamos() {
         dni,
         nombre:       (r[iNom] || '').trim(),
         fecha:        (r[iFecha] || '').trim(),
-        prestamo:     limpiarMonto(r[iPrest]),
+        capital:      limpiarMonto(r[iPrest]),  // columna PRESTAMOS del Sheets = Capital
         interes:      limpiarMonto(r[iInter]),
         totalCuotas:  totalCuotas,
         montoPagar:   montoPagar,
         cuotaFija:    cuotaFija,
         cuotasPagadas:cuotasPagadasEnHoja,
-        saldo:        montoPagadoEnHoja, // esto es en realidad lo pagado!
+        montoPagado:  montoPagadoEnHoja,  // columna SALDO del Sheets = Monto Pagado
       });
     }
     prestamosLoaded = true;
@@ -436,10 +436,10 @@ function renderPrestamos(dni) {
 
   // Resumen total
   const totalDeuda  = misPrestamos.reduce((s,p) => s + p.montoPagar, 0);
-  // Como p.saldo trae el monto pagado calculado en excel:
+  // p.montoPagado viene de la columna SALDO del Sheets (= monto pagado acumulado)
   const totalPagado = misPrestamos.reduce((s,p) => {
     const done = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
-    return s + (done ? p.montoPagar : Math.max(0, p.saldo));
+    return s + (done ? p.montoPagar : Math.max(0, p.montoPagado));
   }, 0);
   const totalSaldo = Math.max(0, totalDeuda - totalPagado);
   const progTotal   = totalDeuda > 0 ? Math.min(100, (totalPagado / totalDeuda) * 100) : 0;
@@ -493,12 +493,12 @@ function renderPrestamos(dni) {
     
     const progCuotas = isComplete ? 100 : (p.totalCuotas > 0 ? (p.cuotasPagadas / p.totalCuotas) * 100 : 0);
     
-    // p.saldo es el monto pagado que viene en la columna SALDO
-    const pagado     = isComplete ? p.montoPagar : Math.max(0, p.saldo);
-    const saldoReal  = isComplete ? 0 : Math.max(0, p.montoPagar - pagado);
+    // p.montoPagado viene de la columna SALDO del Sheets (= monto pagado acumulado)
+    const pagado         = isComplete ? p.montoPagar : Math.max(0, p.montoPagado);
+    const saldoPendiente = isComplete ? 0 : Math.max(0, p.montoPagar - pagado);
     
     const progMonto  = isComplete ? 100 : (p.montoPagar > 0 ? Math.min(100, (pagado / p.montoPagar) * 100) : 0);
-    const color = isComplete ? '#16a34a' : (progCuotas >= 50 ? '#f59e0b' : '#ef4444');
+    const color = isComplete ? '#16a34a' : (saldoPendiente === 0 && p.montoPagar > 0 ? '#16a34a' : (progCuotas >= 50 ? '#f59e0b' : '#ef4444'));
 
     html += `
       <div class="prestamo-card ${isComplete ? 'prestamo-completado' : ''}" style="animation-delay: ${idx * 80}ms">
@@ -509,7 +509,7 @@ function renderPrestamos(dni) {
             </span>
             <span class="prestamo-fecha">📅 ${p.fecha || '—'}</span>
           </div>
-          <div class="prestamo-monto-principal">S/ ${fmtMoney(p.prestamo)}</div>
+          <div class="prestamo-monto-principal">S/ ${fmtMoney(p.capital)}</div>
         </div>
 
         <div class="prestamo-card-body">
@@ -535,7 +535,7 @@ function renderPrestamos(dni) {
           <div class="prestamo-details-grid">
             <div class="prestamo-detail pd-bg-yellow">
               <span class="pd-label">Capital</span>
-              <span class="pd-value pd-yellow">S/ ${fmtMoney(p.prestamo)}</span>
+              <span class="pd-value pd-yellow">S/ ${fmtMoney(p.capital)}</span>
             </div>
             <div class="prestamo-detail">
               <span class="pd-label">Interés</span>
@@ -550,12 +550,12 @@ function renderPrestamos(dni) {
               <span class="pd-value">S/ ${fmtMoney(p.cuotaFija)}</span>
             </div>
             <div class="prestamo-detail">
-              <span class="pd-label">Pagado</span>
+              <span class="pd-label">Monto Pagado</span>
               <span class="pd-value pd-green">S/ ${fmtMoney(pagado)}</span>
             </div>
             <div class="prestamo-detail">
-              <span class="pd-label">Saldo</span>
-              <span class="pd-value pd-red">S/ ${fmtMoney(saldoReal)}</span>
+              <span class="pd-label">Saldo Pendiente</span>
+              <span class="pd-value pd-red">S/ ${fmtMoney(saldoPendiente)}</span>
             </div>
           </div>
 
