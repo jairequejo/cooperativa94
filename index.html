@@ -171,6 +171,16 @@
 
 </main>
 
+<!-- Modal instrucciones instalación PWA -->
+<div id="modalInstall" class="pwa-modal-overlay" style="display:none">
+  <div class="pwa-modal">
+    <button class="pwa-modal-close" onclick="document.getElementById('modalInstall').style.display='none'">✕</button>
+    <div class="pwa-modal-icon">📲</div>
+    <h2 class="pwa-modal-title">Instalar la App</h2>
+    <div id="pwaInstrucciones"></div>
+  </div>
+</div>
+
 <footer>Cooperativa Promoción 94 &middot; Solo lectura</footer>
 
 <!-- Librerías PDF -->
@@ -182,39 +192,91 @@
 
 <!-- Registro del Service Worker (PWA) -->
 <script>
-  let deferredPrompt;
+  let deferredPrompt = null;
   const btnInstall = document.getElementById('btnInstallPwa');
-  
+  const modalInstall = document.getElementById('modalInstall');
+  const pwaInstrucciones = document.getElementById('pwaInstrucciones');
+
+  // Detectar plataforma
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid = /android/i.test(navigator.userAgent);
+  const isMobile = isIOS || isAndroid || window.innerWidth < 768;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+
+  // Capturar el evento nativo si llega
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (btnInstall) btnInstall.style.display = 'inline-flex';
   });
 
-  if (btnInstall) {
-    btnInstall.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('El usuario aceptó la instalación');
-      }
-      deferredPrompt = null;
-      btnInstall.style.display = 'none';
-    });
-  }
-
-  window.addEventListener('appinstalled', (e) => {
+  // Ocultar botón si ya está instalada como app
+  window.addEventListener('appinstalled', () => {
     if (btnInstall) btnInstall.style.display = 'none';
     deferredPrompt = null;
   });
 
+  // Mostrar botón siempre en móvil (si no está en modo standalone)
+  if (btnInstall && isMobile && !isStandalone) {
+    btnInstall.style.display = 'inline-flex';
+  }
+
+  // Lógica al pulsar el botón
+  if (btnInstall) {
+    btnInstall.addEventListener('click', async () => {
+      // Si tenemos el prompt nativo (Android Chrome) → usarlo directamente
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === 'accepted') {
+          btnInstall.style.display = 'none';
+        }
+        return;
+      }
+      // Si no → mostrar instrucciones manuales
+      mostrarInstruccionesPWA();
+    });
+  }
+
+  function mostrarInstruccionesPWA() {
+    if (!modalInstall || !pwaInstrucciones) return;
+    let html = '';
+    if (isIOS) {
+      html = `
+        <p class="pwa-modal-desc">Sigue estos pasos en Safari:</p>
+        <ol class="pwa-steps">
+          <li><span class="pwa-step-ico">1</span> Toca el botón <strong>Compartir</strong> <span class="pwa-inline-icon">⎦↑</span> en la barra inferior de Safari.</li>
+          <li><span class="pwa-step-ico">2</span> Desplázate y elige <strong>"Agregar a pantalla de inicio"</strong>.</li>
+          <li><span class="pwa-step-ico">3</span> Pulsa <strong>Agregar</strong> en la esquina superior derecha.</li>
+        </ol>
+        <p class="pwa-modal-note">⚠️ Solo funciona desde <strong>Safari</strong>.</p>`;
+    } else {
+      html = `
+        <p class="pwa-modal-desc">Sigue estos pasos en Chrome:</p>
+        <ol class="pwa-steps">
+          <li><span class="pwa-step-ico">1</span> Toca el menú <strong>⋮</strong> (tres puntos) en la esquina superior derecha de Chrome.</li>
+          <li><span class="pwa-step-ico">2</span> Selecciona <strong>"Agregar a pantalla de inicio"</strong> o <strong>"Instalar aplicación"</strong>.</li>
+          <li><span class="pwa-step-ico">3</span> Confirma pulsando <strong>Instalar</strong>.</li>
+        </ol>
+        <p class="pwa-modal-note">💡 Si no ves la opción, asegúrate de tener buena conexión y vuelve a intentarlo.</p>`;
+    }
+    pwaInstrucciones.innerHTML = html;
+    modalInstall.style.display = 'flex';
+  }
+
+  // Cerrar modal al pulsar fuera
+  if (modalInstall) {
+    modalInstall.addEventListener('click', (e) => {
+      if (e.target === modalInstall) modalInstall.style.display = 'none';
+    });
+  }
+
+  // Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(reg => {
         console.log('[PWA] Service Worker registrado');
-        
-        // Detectar si hay una actualización esperando
         reg.onupdatefound = () => {
           const installingWorker = reg.installing;
           installingWorker.onstatechange = () => {
@@ -227,13 +289,9 @@
       }).catch(err => console.warn('[PWA] Error al registrar SW:', err));
     });
 
-    // Asegurar recarga cuando el nuevo SW tome el control
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        window.location.reload();
-        refreshing = true;
-      }
+      if (!refreshing) { window.location.reload(); refreshing = true; }
     });
   }
 </script>
