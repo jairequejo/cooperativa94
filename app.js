@@ -536,12 +536,12 @@ function renderPrestamos(dni) {
               <span class="pd-value">S/ ${fmtMoney(p.cuotaFija)}</span>
             </div>
             <div class="prestamo-detail">
-              <span class="pd-label">Pagado</span>
-              <span class="pd-value pd-green">S/ ${fmtMoney(pagado)}</span>
-            </div>
-            <div class="prestamo-detail">
               <span class="pd-label">Saldo</span>
               <span class="pd-value pd-red">S/ ${fmtMoney(saldoReal)}</span>
+            </div>
+            <div class="prestamo-detail">
+              <span class="pd-label">Pagado</span>
+              <span class="pd-value pd-green">S/ ${fmtMoney(pagado)}</span>
             </div>
           </div>
 
