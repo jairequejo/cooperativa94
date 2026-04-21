@@ -61,7 +61,7 @@
 
     <!-- Total de acciones global -->
     <div class="total-acciones-card" id="totalAcciones" style="display:none">
-      <div class="ta-title">📊 Total de Acciones de la Cooperativa</div>
+      <div class="ta-header ta-header-green">📊 Total de Acciones de la Cooperativa</div>
       <div class="ta-grid">
         <div class="ta-item ta-ing">
           <span class="ta-label">Total Acc. Ingresadas</span>
@@ -74,6 +74,29 @@
         <div class="ta-item ta-net">
           <span class="ta-label">Saldo Neto S/.</span>
           <span class="ta-value" id="taNeto">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total interés acumulado de préstamos -->
+    <div class="total-acciones-card" id="totalPrestamos" style="display:none">
+      <div class="ta-header ta-header-blue">🏦 Resumen Global de Préstamos</div>
+      <div class="ta-grid ta-grid-4">
+        <div class="ta-item ta-yellow">
+          <span class="ta-label">Capital Total</span>
+          <span class="ta-value" id="tpCapital">—</span>
+        </div>
+        <div class="ta-item ta-ing">
+          <span class="ta-label">Capital + Interés</span>
+          <span class="ta-value" id="tpMonto">—</span>
+        </div>
+        <div class="ta-item ta-red">
+          <span class="ta-label">Saldo Total</span>
+          <span class="ta-value" id="tpSaldo">—</span>
+        </div>
+        <div class="ta-item ta-net">
+          <span class="ta-label">Total Préstamos</span>
+          <span class="ta-value tp-count" id="tpCount">—</span>
         </div>
       </div>
     </div>

@@ -142,9 +142,17 @@ async function cargarTodo() {
       catch(e) { console.warn('Error egresos', e); EGRESOS = []; }
     })()
   );
+  // Cargar préstamos en paralelo para mostrar resumen en el landing
+  prom.push(
+    (async () => {
+      try { await cargarPrestamos(); }
+      catch(e) { console.warn('Error préstamos', e); }
+    })()
+  );
   await Promise.all(prom);
   loaded = true;
   actualizarTotalAcciones();
+  actualizarTotalPrestamos();
 }
 
 // ── TOTAL ACCIONES GLOBAL ──────────────────────────────────────
@@ -163,6 +171,27 @@ function actualizarTotalAcciones() {
     document.getElementById('taEgresos').textContent  = fmtS(egrT);
     document.getElementById('taNeto').textContent     = 'S/ ' + (neto * 10).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
+}
+
+// ── TOTAL INTERÉS ACUMULADO (PRÉSTAMOS) ───────────────────────
+function actualizarTotalPrestamos() {
+  const el = document.getElementById('totalPrestamos');
+  if (!el) return;
+
+  const totalCapital    = PRESTAMOS.reduce((s, p) => s + p.capital, 0);
+  const totalMontoPagar = PRESTAMOS.reduce((s, p) => s + p.montoPagar, 0);
+  // Saldo total pendiente = suma de lo que cada préstamo aún debe
+  const totalSaldoPend  = PRESTAMOS.reduce((s, p) => {
+    const done = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
+    return s + (done ? 0 : Math.max(0, p.montoPagar - p.montoPagado));
+  }, 0);
+  const totalCount      = PRESTAMOS.length;
+
+  el.style.display = 'block';
+  document.getElementById('tpCapital').textContent  = 'S/ ' + totalCapital.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('tpMonto').textContent    = 'S/ ' + totalMontoPagar.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('tpSaldo').textContent    = 'S/ ' + totalSaldoPend.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('tpCount').textContent    = totalCount;
 }
 
 // ── EGRESOS HELPERS ────────────────────────────────────────────
@@ -385,25 +414,25 @@ async function cargarPrestamos() {
       const montoPagar = limpiarMonto(r[iMonto]);
       const cuotaFija = limpiarMonto(r[iCuota]);
       
-      // En el Google Sheets, la columna "SALDO" en realidad contiene el MONTO PAGADO (Cuotas Pagadas * Cuota Fija)
-      // Por lo tanto, p.saldo aquí será el monto_pagado. Lo manejaremos correctamente en el render()
-      const montoPagadoEnHoja = limpiarMonto(r[iSaldo]); 
+      const montoPagadoEnHoja = limpiarMonto(r[iSaldo]);
       const cuotasPagadasEnHoja = parseInt(r[iPagadas]) || 0;
 
       PRESTAMOS.push({
         dni,
         nombre:       (r[iNom] || '').trim(),
         fecha:        (r[iFecha] || '').trim(),
-        capital:      limpiarMonto(r[iPrest]),  // columna PRESTAMOS del Sheets = Capital
+        capital:      limpiarMonto(r[iPrest]),
         interes:      limpiarMonto(r[iInter]),
         totalCuotas:  totalCuotas,
         montoPagar:   montoPagar,
         cuotaFija:    cuotaFija,
         cuotasPagadas:cuotasPagadasEnHoja,
-        montoPagado:  montoPagadoEnHoja,  // columna SALDO del Sheets = Monto Pagado
+        montoPagado:  montoPagadoEnHoja,
       });
     }
     prestamosLoaded = true;
+    // Actualizar el card del landing en cuanto los datos están listos
+    actualizarTotalPrestamos();
   } catch(e) {
     console.warn('Error cargando préstamos:', e);
     PRESTAMOS = [];
