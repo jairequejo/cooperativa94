@@ -4,7 +4,7 @@
 //              Network-first para datos de Google Sheets
 // ══════════════════════════════════════════════
 
-const CACHE_NAME = 'cooperativa94-v2';
+const CACHE_NAME = 'cooperativa94-v3';
 
 // Assets estáticos a cachear en la instalación
 const STATIC_ASSETS = [
