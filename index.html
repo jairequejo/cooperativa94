@@ -31,10 +31,6 @@
 <body>
 
 <header>
-  <button id="btnInstallPwa" class="btn-install-pwa" style="display: none;">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Instalar App
-  </button>
   <img src="assets/img/logo.png" alt="Logo Cooperativa 94" class="header-logo" />
   <div class="header-text">
     <div class="badge">⚜ Cooperativa</div>
@@ -49,8 +45,9 @@
   <div id="loginScreen">
 
     <div class="card">
-      <span class="card-label">🔍 Busca por nombre o DNI</span>
+      <span class="card-label">Consulta de Socios</span>
       <div class="input-wrap">
+        <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="buscarInput"
                placeholder="Apellido, nombre o número de DNI…"
                autocomplete="off" inputmode="text" enterkeyhint="search" />
@@ -65,43 +62,68 @@
     </div>
 
     <!-- Total de acciones global -->
-    <div class="total-acciones-card" id="totalAcciones" style="display:none">
-      <div class="ta-header ta-header-green">📊 Total de Acciones de la Cooperativa</div>
-      <div class="ta-grid">
-        <div class="ta-item ta-ing">
-          <span class="ta-label">Total Acc. Ingresadas</span>
-          <span class="ta-value" id="taIngresos">—</span>
+    <div class="sumcard" id="totalAcciones" style="display:none">
+      <div class="sumcard-head">
+        <div class="sumcard-head-icon sc-icon-green">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/>
+            <polyline points="16 7 22 7 22 13"/>
+          </svg>
         </div>
-        <div class="ta-item ta-egr">
-          <span class="ta-label">Total Acc. Egresadas</span>
-          <span class="ta-value" id="taEgresos">—</span>
+        <div class="sumcard-head-text">
+          <div class="sumcard-head-title">Acciones de la Cooperativa</div>
+          <div class="sumcard-head-sub">Total acumulado de aportes</div>
         </div>
-        <div class="ta-item ta-net">
-          <span class="ta-label">Saldo Neto S/.</span>
-          <span class="ta-value" id="taNeto">—</span>
+      </div>
+      <div class="sumcard-hero">
+        <div class="sumcard-hero-label">Saldo Neto en S/.</div>
+        <div class="sumcard-hero-val sc-val-green" id="taNeto">—</div>
+      </div>
+      <div class="sumcard-row2">
+        <div class="sumcard-sub-metric">
+          <div class="sumcard-dot sc-dot-green"></div>
+          <div>
+            <div class="sumcard-sub-label">Acc. Ingresadas</div>
+            <div class="sumcard-sub-val sc-val-green" id="taIngresos">—</div>
+          </div>
+        </div>
+        <div class="sumcard-sub-metric">
+          <div class="sumcard-dot sc-dot-red"></div>
+          <div>
+            <div class="sumcard-sub-label">Acc. Egresadas</div>
+            <div class="sumcard-sub-val sc-val-red" id="taEgresos">—</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Total interés acumulado de préstamos -->
-    <div class="total-acciones-card" id="totalPrestamos" style="display:none">
-      <div class="ta-header ta-header-blue">🏦 Resumen Global de Préstamos</div>
-      <div class="ta-grid ta-grid-4">
-        <div class="ta-item ta-yellow">
-          <span class="ta-label">Capital Total</span>
-          <span class="ta-value" id="tpCapital">—</span>
+    <!-- Resumen global de préstamos -->
+    <div class="sumcard" id="totalPrestamos" style="display:none">
+      <div class="sumcard-head">
+        <div class="sumcard-head-icon sc-icon-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
         </div>
-        <div class="ta-item ta-ing">
-          <span class="ta-label">Capital + Interés</span>
-          <span class="ta-value" id="tpMonto">—</span>
+        <div class="sumcard-head-text">
+          <div class="sumcard-head-title">Portafolio de Préstamos</div>
+          <div class="sumcard-head-sub">Resumen global de créditos</div>
         </div>
-        <div class="ta-item ta-red">
-          <span class="ta-label">Saldo Total</span>
-          <span class="ta-value" id="tpSaldo">—</span>
+        <div class="sumcard-count-pill" id="tpCount">—</div>
+      </div>
+      <div class="sumcard-kpi-grid">
+        <div class="sumcard-kpi sc-kpi-amber">
+          <div class="sumcard-kpi-label">Capital Total</div>
+          <div class="sumcard-kpi-val sc-val-amber" id="tpCapital">—</div>
         </div>
-        <div class="ta-item ta-net">
-          <span class="ta-label">Total Préstamos</span>
-          <span class="ta-value tp-count" id="tpCount">—</span>
+        <div class="sumcard-kpi sc-kpi-blue">
+          <div class="sumcard-kpi-label">Cap. + Interés</div>
+          <div class="sumcard-kpi-val sc-val-blue" id="tpMonto">—</div>
+        </div>
+        <div class="sumcard-kpi sc-kpi-red">
+          <div class="sumcard-kpi-label">Saldo Pendiente</div>
+          <div class="sumcard-kpi-val sc-val-red" id="tpSaldo">—</div>
         </div>
       </div>
     </div>
@@ -118,9 +140,12 @@
     </div>
 
     <div class="user-banner">
-      <div>
-        <div class="user-name" id="uNombre">—</div>
-        <div class="user-meta" id="uMeta"></div>
+      <div class="user-banner-top">
+        <div class="user-avatar" id="uAvatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="uNombre">—</div>
+          <div class="user-meta" id="uMeta"></div>
+        </div>
       </div>
       <div class="total-block">
         <div class="total-label">Billetera</div>
@@ -182,6 +207,21 @@
   </div>
 </div>
 
+<!-- Toast PWA — banner flotante de instalación -->
+<div id="pwaToast" class="pwa-toast">
+  <div class="pwa-toast-logo">
+    <img src="assets/img/logo.png" alt="Logo" />
+  </div>
+  <div class="pwa-toast-text">
+    <div class="pwa-toast-title">Descarga la App</div>
+    <div class="pwa-toast-sub">Accede más rápido desde tu celular</div>
+  </div>
+  <button class="pwa-toast-btn" id="btnInstallPwa">Instalar</button>
+  <button class="pwa-toast-close" id="pwaToastClose" aria-label="Cerrar">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
 <footer>Cooperativa Promoción 94 &middot; Solo lectura</footer>
 
 <!-- Librerías PDF -->
@@ -191,55 +231,89 @@
 <!-- App principal -->
 <script src="assets/js/app.js"></script>
 
-<!-- Registro del Service Worker (PWA) -->
+<!-- PWA: Service Worker + Toast de instalación -->
 <script>
-  let deferredPrompt = null;
-  const btnInstall = document.getElementById('btnInstallPwa');
-  const modalInstall = document.getElementById('modalInstall');
-  const pwaInstrucciones = document.getElementById('pwaInstrucciones');
-
-  // Detectar plataforma
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isAndroid = /android/i.test(navigator.userAgent);
-  const isMobile = isIOS || isAndroid || window.innerWidth < 768;
+  // ── Detección de plataforma ──────────────────
+  const isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isAndroid    = /android/i.test(navigator.userAgent);
+  const isMobile     = isIOS || isAndroid || window.innerWidth < 768;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches
                     || window.navigator.standalone === true;
 
-  // Capturar el evento nativo si llega
+  let deferredPrompt = null;
+  let toastApparitions = 0;
+  let autoHideTimer = null;
+
+  const toast          = document.getElementById('pwaToast');
+  const btnInstall     = document.getElementById('btnInstallPwa');
+  const toastClose     = document.getElementById('pwaToastClose');
+  const modalInstall   = document.getElementById('modalInstall');
+  const pwaInstrucciones = document.getElementById('pwaInstrucciones');
+
+  // ── Mostrar / ocultar toast ──────────────────
+  function mostrarToast() {
+    if (!toast || isStandalone) return;
+    toast.classList.add('pwa-toast-show');
+    // Auto-ocultar a los 9 segundos
+    clearTimeout(autoHideTimer);
+    autoHideTimer = setTimeout(ocultarToast, 9000);
+  }
+  function ocultarToast() {
+    if (!toast) return;
+    toast.classList.remove('pwa-toast-show');
+    clearTimeout(autoHideTimer);
+  }
+
+  // ── Aparece por primera vez a los 2.5s ──────
+  if (isMobile && !isStandalone) {
+    setTimeout(() => {
+      mostrarToast();
+      toastApparitions++;
+    }, 2500);
+  }
+
+  // ── Cerrar manualmente → reaparecer una vez después de 40s ──
+  if (toastClose) {
+    toastClose.addEventListener('click', () => {
+      ocultarToast();
+      if (toastApparitions < 2) {
+        setTimeout(() => {
+          mostrarToast();
+          toastApparitions++;
+        }, 40000);
+      }
+    });
+  }
+
+  // ── Capturar evento nativo de instalación ───
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
   });
 
-  // Ocultar botón si ya está instalada como app
+  // ── Ocultar toast si ya se instaló ──────────
   window.addEventListener('appinstalled', () => {
-    if (btnInstall) btnInstall.style.display = 'none';
+    ocultarToast();
     deferredPrompt = null;
   });
 
-  // Mostrar botón siempre en móvil (si no está en modo standalone)
-  if (btnInstall && isMobile && !isStandalone) {
-    btnInstall.style.display = 'inline-flex';
-  }
-
-  // Lógica al pulsar el botón
+  // ── Botón "Instalar" dentro del toast ───────
   if (btnInstall) {
     btnInstall.addEventListener('click', async () => {
-      // Si tenemos el prompt nativo (Android Chrome) → usarlo directamente
       if (deferredPrompt) {
+        // Android Chrome: prompt nativo directo
         deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
         deferredPrompt = null;
-        if (outcome === 'accepted') {
-          btnInstall.style.display = 'none';
-        }
+        if (outcome === 'accepted') ocultarToast();
         return;
       }
-      // Si no → mostrar instrucciones manuales
+      // iOS / otros → instrucciones manuales
       mostrarInstruccionesPWA();
     });
   }
 
+  // ── Instrucciones manuales (modal) ──────────
   function mostrarInstruccionesPWA() {
     if (!modalInstall || !pwaInstrucciones) return;
     let html = '';
@@ -264,32 +338,31 @@
     }
     pwaInstrucciones.innerHTML = html;
     modalInstall.style.display = 'flex';
+    ocultarToast();
   }
 
-  // Cerrar modal al pulsar fuera
+  // ── Cerrar modal al pulsar fuera ─────────────
   if (modalInstall) {
     modalInstall.addEventListener('click', (e) => {
       if (e.target === modalInstall) modalInstall.style.display = 'none';
     });
   }
 
-  // Service Worker
+  // ── Service Worker ───────────────────────────
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').then(reg => {
         console.log('[PWA] Service Worker registrado');
         reg.onupdatefound = () => {
-          const installingWorker = reg.installing;
-          installingWorker.onstatechange = () => {
-            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('[PWA] Nueva versión detectada, recargando...');
+          const w = reg.installing;
+          w.onstatechange = () => {
+            if (w.state === 'installed' && navigator.serviceWorker.controller) {
               window.location.reload();
             }
           };
         };
-      }).catch(err => console.warn('[PWA] Error al registrar SW:', err));
+      }).catch(err => console.warn('[PWA] Error SW:', err));
     });
-
     let refreshing = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (!refreshing) { window.location.reload(); refreshing = true; }

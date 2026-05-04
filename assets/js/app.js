@@ -268,6 +268,9 @@ function mostrarDashboard(socio) {
 
   document.getElementById('uNombre').textContent = socio.nombre;
   document.getElementById('uMeta').textContent   = 'DNI ' + socio.dni;
+  const words = socio.nombre.trim().split(/\s+/).filter(w => w.length > 0);
+  const initials = words.slice(0, 2).map(w => w[0].toUpperCase()).join('');
+  document.getElementById('uAvatar').textContent = initials || '?';
 
   const anios = Object.keys(HOJAS).sort();
   let totalIng = 0, totalEgr = 0;
@@ -318,8 +321,9 @@ function mostrarDashboard(socio) {
         const row = document.createElement('div');
         row.className = 'month-row';
         row.style.animationDelay = (i * 30) + 'ms';
-        row.innerHTML = `<span class="month-name">${MESES_FULL[i]}</span>
-          <span class="month-aporte ${val > 0 ? 'pagado' : 'nopago'}">${val > 0 ? fmtS(val) : 'sin acciones'}</span>`;
+        row.innerHTML = `<span class="month-dot ${val > 0 ? 'dot-green' : 'dot-gray'}"></span>
+          <span class="month-name">${MESES_FULL[i]}</span>
+          <span class="month-aporte ${val > 0 ? 'pagado' : 'nopago'}">${val > 0 ? fmtS(val) : '—'}</span>`;
         rowsDiv.appendChild(row);
 
         const egrMes = egresosMesAnio(socio.dni, anio, m);
