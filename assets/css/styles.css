@@ -90,7 +90,39 @@ header {
   gap: 14px;
   position: relative;
   z-index: 1;
+  overflow: hidden;
   transition: padding .3s ease, gap .3s ease;
+}
+
+/* Foto panorámica animada de los integrantes Promo 94 */
+header::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  /* La imagen es más ancha que el contenedor para poder desplazarse */
+  background-image: url('../img/fondo.jpg');
+  background-size: auto 100%;
+  background-repeat: repeat-x;
+  background-position: 0% center;
+  opacity: 0.18;
+  pointer-events: none;
+  animation: panorama 28s ease-in-out infinite alternate;
+  z-index: 0;
+}
+
+@keyframes panorama {
+  0%   { background-position: 0% center; }
+  100% { background-position: 100% center; }
+}
+
+/* Los elementos del header deben estar por encima de la foto */
+header .header-logo,
+header .header-text,
+header .badge,
+header h1,
+header .subtitle {
+  position: relative;
+  z-index: 1;
 }
 
 header.compact {
