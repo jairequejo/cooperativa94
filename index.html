@@ -127,6 +127,37 @@
         </div>
       </div>
     </div>
+
+    <!-- Resumen global de préstamos 2026 -->
+    <div class="sumcard" id="totalPrestamos2026" style="display:none">
+      <div class="sumcard-head">
+        <div class="sumcard-head-icon sc-icon-blue">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="5" width="20" height="14" rx="2"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+        <div class="sumcard-head-text">
+          <div class="sumcard-head-title">Portafolio de Préstamos 2026</div>
+          <div class="sumcard-head-sub">Resumen global de créditos</div>
+        </div>
+        <div class="sumcard-count-pill" id="tp2026Count">—</div>
+      </div>
+      <div class="sumcard-kpi-grid">
+        <div class="sumcard-kpi sc-kpi-amber">
+          <div class="sumcard-kpi-label">Capital Total</div>
+          <div class="sumcard-kpi-val sc-val-amber" id="tp2026Capital">—</div>
+        </div>
+        <div class="sumcard-kpi sc-kpi-blue">
+          <div class="sumcard-kpi-label">Cap. + Interés</div>
+          <div class="sumcard-kpi-val sc-val-blue" id="tp2026Monto">—</div>
+        </div>
+        <div class="sumcard-kpi sc-kpi-red">
+          <div class="sumcard-kpi-label">Saldo Pendiente</div>
+          <div class="sumcard-kpi-val sc-val-red" id="tp2026Saldo">—</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ── DASHBOARD ── -->
@@ -350,30 +381,15 @@
 
   // ── Service Worker ───────────────────────────
   if ('serviceWorker' in navigator) {
-    // Escuchar mensaje del SW cuando se activa una versión nueva → recargar
-    navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data && event.data.type === 'SW_UPDATED') {
-        console.log('[PWA] Nueva versión detectada, recargando...');
-        window.location.reload();
-      }
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) { refreshing = true; window.location.reload(); }
     });
 
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js').then(reg => {
-        console.log('[PWA] Service Worker registrado');
-        reg.onupdatefound = () => {
-          const w = reg.installing;
-          w.onstatechange = () => {
-            if (w.state === 'installed' && navigator.serviceWorker.controller) {
-              window.location.reload();
-            }
-          };
-        };
-      }).catch(err => console.warn('[PWA] Error SW:', err));
-    });
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) { window.location.reload(); refreshing = true; }
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('[PWA] Service Worker registrado'))
+        .catch(err => console.warn('[PWA] Error SW:', err));
     });
   }
 </script>

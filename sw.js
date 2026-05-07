@@ -4,7 +4,7 @@
 //              Network-first para datos de Google Sheets
 // ══════════════════════════════════════════════
 
-const CACHE_NAME = 'cooperativa94-v8';
+const CACHE_NAME = 'cooperativa94-v9';
 
 // Assets estáticos a cachear en la instalación
 const STATIC_ASSETS = [
@@ -44,12 +44,6 @@ self.addEventListener('activate', event => {
           })
       )
     ).then(() => self.clients.claim())
-      .then(() => {
-        // Notificar a todas las ventanas abiertas para que recarguen
-        return self.clients.matchAll({ type: 'window' }).then(clients => {
-          clients.forEach(client => client.postMessage({ type: 'SW_UPDATED' }));
-        });
-      })
   );
 });
 

@@ -11,7 +11,8 @@ const HOJAS = {
   '2026': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=1981676917&single=true&output=csv',
 };
 const URL_EGRESOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=24617374&single=true&output=csv';
-const URL_PRESTAMOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=205656499&single=true&output=csv';
+const URL_PRESTAMOS      = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=205656499&single=true&output=csv';
+const URL_PRESTAMOS_2026 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ870L-sHnnVC-k788HMHvSua9XccZ5pAF1Uaa4DI3mFHr8EVoeSUJq9Y0_B9xkMvIqYwal3423W0vw/pub?gid=721937858&single=true&output=csv';
 // ══════════════════════════════════════════════════════════════
 
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sept','oct','nov','dic'];
@@ -30,12 +31,15 @@ const MES_NUM = {1:'ene',2:'feb',3:'mar',4:'abr',5:'may',6:'jun',
                  7:'jul',8:'ago',9:'sept',10:'oct',11:'nov',12:'dic'};
 
 // ── ESTADO GLOBAL ──────────────────────────────────────────────
-let SOCIOS    = [];
-let APORTES   = {};
-let EGRESOS   = [];
-let PRESTAMOS = [];
-let loaded    = false;
-let prestamosLoaded = false;
+let SOCIOS         = [];
+let APORTES        = {};
+let EGRESOS        = [];
+let PRESTAMOS      = [];
+let PRESTAMOS_2026 = [];
+let loaded              = false;
+let prestamosLoaded     = false;
+let prestamos2026Loaded = false;
+let _cargarTodoPromise  = null;
 let socioActual = null;
 
 // ── UTILS ──────────────────────────────────────────────────────
@@ -129,30 +133,41 @@ async function cargarEgresosCSV(url) {
 }
 
 // ── CARGAR TODO ────────────────────────────────────────────────
-async function cargarTodo() {
-  if (loaded) return;
+function cargarTodo() {
+  if (loaded) return Promise.resolve();
+  // Singleton: si ya hay una carga en curso, devuelve la misma promesa
+  if (_cargarTodoPromise) return _cargarTodoPromise;
 
-  const prom = Object.entries(HOJAS).map(async ([anio, url]) => {
-    try { APORTES[anio] = await cargarHoja(anio, url); }
-    catch(e) { console.warn('Error hoja', anio, e); APORTES[anio] = {}; }
-  });
-  prom.push(
-    (async () => {
-      try { EGRESOS = await cargarEgresosCSV(URL_EGRESOS); }
-      catch(e) { console.warn('Error egresos', e); EGRESOS = []; }
-    })()
-  );
-  // Cargar préstamos en paralelo para mostrar resumen en el landing
-  prom.push(
-    (async () => {
-      try { await cargarPrestamos(); }
-      catch(e) { console.warn('Error préstamos', e); }
-    })()
-  );
-  await Promise.all(prom);
-  loaded = true;
-  actualizarTotalAcciones();
-  actualizarTotalPrestamos();
+  _cargarTodoPromise = (async () => {
+    const prom = Object.entries(HOJAS).map(async ([anio, url]) => {
+      try { APORTES[anio] = await cargarHoja(anio, url); }
+      catch(e) { console.warn('Error hoja', anio, e); APORTES[anio] = {}; }
+    });
+    prom.push(
+      (async () => {
+        try { EGRESOS = await cargarEgresosCSV(URL_EGRESOS); }
+        catch(e) { console.warn('Error egresos', e); EGRESOS = []; }
+      })()
+    );
+    prom.push(
+      (async () => {
+        try { await cargarPrestamos(); }
+        catch(e) { console.warn('Error préstamos', e); }
+      })()
+    );
+    prom.push(
+      (async () => {
+        try { await cargarPrestamos2026(); }
+        catch(e) { console.warn('Error préstamos 2026', e); }
+      })()
+    );
+    await Promise.all(prom);
+    loaded = true;
+    actualizarTotalAcciones();
+    actualizarTotalPrestamos();
+  })();
+
+  return _cargarTodoPromise;
 }
 
 // ── TOTAL ACCIONES GLOBAL ──────────────────────────────────────
@@ -192,6 +207,26 @@ function actualizarTotalPrestamos() {
   document.getElementById('tpMonto').textContent    = 'S/ ' + totalMontoPagar.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('tpSaldo').textContent    = 'S/ ' + totalSaldoPend.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
   document.getElementById('tpCount').textContent    = totalCount;
+}
+
+// ── TOTAL INTERÉS ACUMULADO (PRÉSTAMOS 2026) ──────────────────
+function actualizarTotalPrestamos2026() {
+  const el = document.getElementById('totalPrestamos2026');
+  if (!el) return;
+
+  const totalCapital    = PRESTAMOS_2026.reduce((s, p) => s + p.capital, 0);
+  const totalMontoPagar = PRESTAMOS_2026.reduce((s, p) => s + p.montoPagar, 0);
+  const totalSaldoPend  = PRESTAMOS_2026.reduce((s, p) => {
+    const done = p.cuotasPagadas >= p.totalCuotas && p.totalCuotas > 0;
+    return s + (done ? 0 : Math.max(0, p.montoPagar - p.montoPagado));
+  }, 0);
+  const totalCount = PRESTAMOS_2026.length;
+
+  el.style.display = 'block';
+  document.getElementById('tp2026Capital').textContent = 'S/ ' + totalCapital.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('tp2026Monto').textContent   = 'S/ ' + totalMontoPagar.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('tp2026Saldo').textContent   = 'S/ ' + totalSaldoPend.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('tp2026Count').textContent   = totalCount;
 }
 
 // ── EGRESOS HELPERS ────────────────────────────────────────────
@@ -356,6 +391,7 @@ function mostrarDashboard(socio) {
   switchTab('movimientos');
   // Pre-cargar préstamos en background
   cargarPrestamos();
+  cargarPrestamos2026();
 }
 
 // ── VOLVER ─────────────────────────────────────────────────────
@@ -440,6 +476,53 @@ async function cargarPrestamos() {
   } catch(e) {
     console.warn('Error cargando préstamos:', e);
     PRESTAMOS = [];
+    prestamosLoaded = true; // evita loop infinito en renderPrestamos
+  }
+}
+
+async function cargarPrestamos2026() {
+  if (prestamos2026Loaded) return;
+  try {
+    const res = await fetch(URL_PRESTAMOS_2026 + '&t=' + Date.now(), { cache: 'no-store' });
+    const rows = parseCSV(await res.text());
+    const hdr = rows[0].map(h => h.trim().toLowerCase());
+
+    const iDni    = hdr.findIndex(h => h === 'dni');
+    const iNom    = hdr.findIndex(h => h.includes('nombre'));
+    const iFecha  = hdr.findIndex(h => h.includes('fecha'));
+    const iPrest  = hdr.findIndex(h => h.includes('capital'));
+    const iInter  = hdr.findIndex(h => h.includes('interes') || h.includes('interés'));
+    const iTotal  = hdr.findIndex(h => h.includes('total de cuotas') || h.includes('total cuotas'));
+    const iMonto  = hdr.findIndex(h => h.includes('monto a pagar'));
+    const iCuota  = hdr.findIndex(h => h.includes('cuota fija'));
+    const iPagadas= hdr.findIndex(h => h.includes('cuotas pagadas') || h.includes('pagadas'));
+    const iSaldo  = hdr.findIndex(h => h.includes('monto pagado'));
+
+    PRESTAMOS_2026 = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      const dni = (r[iDni] || '').trim();
+      if (!dni) continue;
+
+      PRESTAMOS_2026.push({
+        dni,
+        nombre:        (r[iNom]  || '').trim(),
+        fecha:         (r[iFecha]|| '').trim(),
+        capital:       limpiarMonto(r[iPrest]),
+        interes:       limpiarMonto(r[iInter]),
+        totalCuotas:   parseInt(r[iTotal]) || 0,
+        montoPagar:    limpiarMonto(r[iMonto]),
+        cuotaFija:     limpiarMonto(r[iCuota]),
+        cuotasPagadas: parseInt(r[iPagadas]) || 0,
+        montoPagado:   limpiarMonto(r[iSaldo]),
+      });
+    }
+    prestamos2026Loaded = true;
+    actualizarTotalPrestamos2026();
+  } catch(e) {
+    console.warn('Error cargando préstamos 2026:', e);
+    PRESTAMOS_2026 = [];
+    prestamos2026Loaded = true; // evita loop infinito en renderPrestamos
   }
 }
 
@@ -451,16 +534,18 @@ function renderPrestamos(dni) {
   content.innerHTML = '';
   empty.style.display = 'none';
 
-  if (!prestamosLoaded) {
+  if (!prestamosLoaded || !prestamos2026Loaded) {
     loading.style.display = 'flex';
-    // Esperar a que carguen y reintentar
     setTimeout(() => renderPrestamos(dni), 500);
     return;
   }
 
   loading.style.display = 'none';
 
-  const misPrestamos = PRESTAMOS.filter(p => p.dni === dni);
+  const misPrestamos = [
+    ...PRESTAMOS.filter(p => p.dni === dni),
+    ...PRESTAMOS_2026.filter(p => p.dni === dni),
+  ];
 
   if (!misPrestamos.length) {
     empty.style.display = 'flex';
