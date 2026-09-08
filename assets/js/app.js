@@ -263,10 +263,12 @@ function actualizarRankingAportantes() {
     total.className = 'ranking-total';
 
     const valor = document.createElement('strong');
-    valor.textContent = fmtS(socio.acciones);
+    const saldoNeto = socio.acciones * 10;
+    valor.textContent = 'S/ ' + saldoNeto.toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     const unidad = document.createElement('span');
-    unidad.textContent = 'acciones';
+    unidad.textContent = 'saldo neto';
+
     total.append(valor, unidad);
 
     fila.append(numero, contenido, total);
