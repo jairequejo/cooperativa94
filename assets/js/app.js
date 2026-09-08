@@ -41,6 +41,7 @@ let prestamosLoaded     = false;
 let prestamos2026Loaded = false;
 let _cargarTodoPromise  = null;
 let socioActual = null;
+let rankingAportantesExpandido = false;
 
 // ── UTILS ──────────────────────────────────────────────────────
 function sinTildes(s) {
@@ -165,6 +166,7 @@ function cargarTodo() {
     loaded = true;
     actualizarTotalAcciones();
     actualizarTotalPrestamos();
+    actualizarRankingAportantes();
   })();
 
   return _cargarTodoPromise;
@@ -186,6 +188,97 @@ function actualizarTotalAcciones() {
     document.getElementById('taEgresos').textContent  = fmtS(egrT);
     document.getElementById('taNeto').textContent     = 'S/ ' + (neto * 10).toLocaleString('es-PE', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
+}
+
+// ── RANKING DE APORTANTES ─────────────────────────────────────
+function actualizarRankingAportantes() {
+  const card  = document.getElementById('rankingAportantes');
+  const lista = document.getElementById('rankingAportantesLista');
+  const footer = document.getElementById('rankingAportantesFooter');
+  const boton  = document.getElementById('rankingAportantesBtn');
+  if (!card || !lista || !footer || !boton) return;
+
+  const egresosPorDni = EGRESOS.reduce((totales, egreso) => {
+    totales[egreso.dni] = (totales[egreso.dni] || 0) + egreso.monto;
+    return totales;
+  }, {});
+
+  const rankingCompleto = SOCIOS.map(socio => {
+    const accionesIngresadas = Object.values(APORTES).reduce((total, porDni) => {
+      const meses = porDni[socio.dni] || {};
+      return total + Object.values(meses).reduce((suma, monto) => suma + monto, 0);
+    }, 0);
+
+    return {
+      nombre: socio.nombre,
+      acciones: accionesIngresadas - (egresosPorDni[socio.dni] || 0)
+    };
+  })
+    .filter(socio => socio.acciones > 0)
+    .sort((a, b) => b.acciones - a.acciones || a.nombre.localeCompare(b.nombre, 'es'));
+
+  const ranking = rankingAportantesExpandido
+    ? rankingCompleto
+    : rankingCompleto.slice(0, 5);
+
+  lista.replaceChildren();
+  if (!ranking.length) {
+    card.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = rankingCompleto.length > 5 ? 'flex' : 'none';
+  boton.setAttribute('aria-expanded', String(rankingAportantesExpandido));
+  boton.querySelector('span').textContent = rankingAportantesExpandido ? 'Ver menos' : 'Ver todos';
+  card.classList.toggle('ranking-expanded', rankingAportantesExpandido);
+
+  const mayorSaldo = ranking[0].acciones;
+  ranking.forEach((socio, indice) => {
+    const posicion = indice + 1;
+
+    const fila = document.createElement('div');
+    fila.className = `ranking-item ranking-position-${posicion}`;
+
+    const numero = document.createElement('span');
+    numero.className = 'ranking-position';
+    numero.textContent = posicion;
+
+    const contenido = document.createElement('div');
+    contenido.className = 'ranking-member';
+
+    const nombre = document.createElement('div');
+    nombre.className = 'ranking-name';
+    nombre.textContent = socio.nombre;
+
+    const progreso = document.createElement('div');
+    progreso.className = 'ranking-progress';
+    progreso.setAttribute('aria-hidden', 'true');
+
+    const barra = document.createElement('span');
+    barra.style.width = `${Math.max(8, (socio.acciones / mayorSaldo) * 100)}%`;
+    progreso.appendChild(barra);
+    contenido.append(nombre, progreso);
+
+    const total = document.createElement('div');
+    total.className = 'ranking-total';
+
+    const valor = document.createElement('strong');
+    valor.textContent = fmtS(socio.acciones);
+
+    const unidad = document.createElement('span');
+    unidad.textContent = 'acciones';
+    total.append(valor, unidad);
+
+    fila.append(numero, contenido, total);
+    lista.appendChild(fila);
+  });
+
+  card.style.display = 'block';
+}
+
+function toggleRankingAportantes() {
+  rankingAportantesExpandido = !rankingAportantesExpandido;
+  actualizarRankingAportantes();
 }
 
 // ── TOTAL INTERÉS ACUMULADO (PRÉSTAMOS) ───────────────────────

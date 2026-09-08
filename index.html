@@ -158,6 +158,35 @@
         </div>
       </div>
     </div>
+
+    <!-- Ranking de socios con mayor saldo de acciones -->
+    <section class="ranking-card" id="rankingAportantes" style="display:none" aria-labelledby="rankingAportantesTitulo">
+      <div class="ranking-head">
+        <div class="ranking-head-icon" aria-hidden="true">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 21h8"/>
+            <path d="M12 17v4"/>
+            <path d="M7 4h10v4a5 5 0 0 1-10 0V4Z"/>
+            <path d="M7 6H4v1a4 4 0 0 0 4 4"/>
+            <path d="M17 6h3v1a4 4 0 0 1-4 4"/>
+          </svg>
+        </div>
+        <div class="ranking-head-text">
+          <h2 class="ranking-title" id="rankingAportantesTitulo">Ranking de aportantes</h2>
+          <p class="ranking-subtitle">Socios con mayor saldo de acciones</p>
+        </div>
+        <span class="ranking-pill">Top 5</span>
+      </div>
+      <div class="ranking-list" id="rankingAportantesLista"></div>
+      <div class="ranking-footer" id="rankingAportantesFooter">
+        <button class="ranking-more-btn" id="rankingAportantesBtn" type="button" onclick="toggleRankingAportantes()" aria-expanded="false">
+          <span>Ver todos</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
+    </section>
   </div>
 
   <!-- ── DASHBOARD ── -->
